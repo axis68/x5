@@ -25,7 +25,7 @@ export default function Game() {
     camera: { x: 0, y: 0 },
     keys: new Set(),
   });
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
