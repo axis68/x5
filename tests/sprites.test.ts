@@ -1,4 +1,4 @@
-import { SPRITE_SIZE } from "../src/sprites";
+import { SPRITE_SIZE, Sprite } from "../src/sprites";
 
 // Import functions directly to test them
 const mockContext = {
@@ -261,7 +261,7 @@ describe("Sprites Module", () => {
 
     test("getTileSprite hash function produces deterministic results", () => {
       // Test the same coordinates multiple times
-      const results = [];
+      const results: Sprite[] = [];
       for (let i = 0; i < 5; i++) {
         results.push(getTileSprite(7, 7));
       }
