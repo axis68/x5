@@ -55,6 +55,10 @@
 - git config user.name "James Debug"
 - git config user.email "james.debug@gmail.com"  
 
+- The first time you push you will be asked to authentificate yourself with a GitHub account
+  - If necessary, sign up in GitHub
+  - Authentificate yourself with the browser
+
 ## Node version
 
 Please use node >=24.4.0, with node version 18, npm run dev may fail
