@@ -62,4 +62,3 @@
 ## Node version
 
 Please use node >=24.4.0, with node version 18, npm run dev may fail
-
