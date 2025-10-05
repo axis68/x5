@@ -74,7 +74,7 @@ export default function Game() {
       gameState.camera.y = gameState.player.y - CANVAS_HEIGHT / 2;
     };
 
-    const render = () => {
+    const render = (timestamp: DOMHighResTimeStamp) => {
       const gameState = gameStateRef.current;
 
       // Clear offscreen canvas
@@ -90,6 +90,8 @@ export default function Game() {
       // Copy offscreen canvas to main canvas (double buffering)
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       ctx.drawImage(offscreenCanvas, 0, 0);
+
+      // ctx.fillText(`Hello X5! ${timestamp}`, 10, 20);
     };
 
     const renderBackground = (
@@ -121,13 +123,13 @@ export default function Game() {
       drawSprite(ctx, sprites.player, playerScreenX, playerScreenY);
     };
 
-    const gameLoop = () => {
+    const gameLoop = (timestamp: DOMHighResTimeStamp) => {
       update();
-      render();
+      render(timestamp);
       animationFrameRef.current = requestAnimationFrame(gameLoop);
     };
 
-    gameLoop();
+    gameLoop(0);
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
