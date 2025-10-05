@@ -91,7 +91,7 @@ export default function Game() {
       ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
       ctx.drawImage(offscreenCanvas, 0, 0);
 
-      ctx.fillText(`Hello X5! ${timestamp}`, 10, 20);
+      // ctx.fillText(`Hello X5! ${timestamp}`, 10, 20);
     };
 
     const renderBackground = (
