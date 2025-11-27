@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { sprites, getTileSprite, drawSprite, SPRITE_SIZE } from "./sprites";
+import { sprites, getTileSprite, drawSprite, SPRITE_SIZE, loadTileset, findSafeSpawnPosition, isTileSolid, initializeSpritesFromTileset } from "./sprites";
 
 const CANVAS_WIDTH = 800;
 const CANVAS_HEIGHT = 600;
@@ -20,9 +20,11 @@ interface GameState {
 export default function Game() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const offscreenCanvasRef = useRef<HTMLCanvasElement>(null);
+  // Find a safe spawn position for the player
+  const safeSpawn = findSafeSpawnPosition();
   const gameStateRef = useRef<GameState>({
-    player: { x: 0, y: 0 },
-    camera: { x: 0, y: 0 },
+    player: { x: safeSpawn.x, y: safeSpawn.y },
+    camera: { x: safeSpawn.x - CANVAS_WIDTH / 2, y: safeSpawn.y - CANVAS_HEIGHT / 2 },
     keys: new Set(),
   });
   const animationFrameRef = useRef<number | null>(null);
@@ -40,6 +42,16 @@ export default function Game() {
     const offscreenCtx = offscreenCanvas.getContext("2d");
 
     if (!ctx || !offscreenCtx) return;
+
+    // Load the tileset before starting the game
+    loadTileset().then(() => {
+      console.log('Tileset loaded successfully, starting game...');
+      startGame();
+    }).catch((error) => {
+      console.error('Failed to load tileset:', error);
+      // Start game anyway with fallback sprites
+      startGame();
+    });
 
     // Disable image smoothing for pixel art
     ctx.imageSmoothingEnabled = false;
@@ -59,15 +71,57 @@ export default function Game() {
     window.addEventListener("keydown", handleKeyDown);
     window.addEventListener("keyup", handleKeyUp);
 
+    const startGame = () => {
+
+    const checkCollision = (x: number, y: number): boolean => {
+      // Player size is 32x32, check collision for all corners
+      const playerSize = 32;
+      const halfSize = playerSize / 2;
+      
+      // Check the four corners of the player
+      const corners = [
+        { x: x - halfSize, y: y - halfSize }, // Top-left
+        { x: x + halfSize, y: y - halfSize }, // Top-right
+        { x: x - halfSize, y: y + halfSize }, // Bottom-left
+        { x: x + halfSize, y: y + halfSize }, // Bottom-right
+      ];
+      
+      for (const corner of corners) {
+        const tileX = Math.floor(corner.x / SPRITE_SIZE);
+        const tileY = Math.floor(corner.y / SPRITE_SIZE);
+        
+        if (isTileSolid(tileX, tileY)) {
+          return true; // Collision detected
+        }
+      }
+      
+      return false; // No collision
+    };
+
     const update = () => {
       const gameState = gameStateRef.current;
       const { keys } = gameState;
 
-      // Update player position based on keyboard input
-      if (keys.has("ArrowUp")) gameState.player.y -= PLAYER_SPEED;
-      if (keys.has("ArrowDown")) gameState.player.y += PLAYER_SPEED;
-      if (keys.has("ArrowLeft")) gameState.player.x -= PLAYER_SPEED;
-      if (keys.has("ArrowRight")) gameState.player.x += PLAYER_SPEED;
+      // Store original position
+      const originalX = gameState.player.x;
+      const originalY = gameState.player.y;
+
+      // Calculate new position based on keyboard input
+      let newX = originalX;
+      let newY = originalY;
+
+      if (keys.has("ArrowUp")) newY -= PLAYER_SPEED;
+      if (keys.has("ArrowDown")) newY += PLAYER_SPEED;
+      if (keys.has("ArrowLeft")) newX -= PLAYER_SPEED;
+      if (keys.has("ArrowRight")) newX += PLAYER_SPEED;
+
+      // Check collision for the new position
+      if (!checkCollision(newX, newY)) {
+        // No collision, update player position
+        gameState.player.x = newX;
+        gameState.player.y = newY;
+      }
+      // If there's a collision, don't move (keep original position)
 
       // Update camera to follow player (player stays centered)
       gameState.camera.x = gameState.player.x - CANVAS_WIDTH / 2;
@@ -130,6 +184,7 @@ export default function Game() {
     };
 
     gameLoop(0);
+    };
 
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
